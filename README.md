@@ -1,0 +1,2 @@
+# University_Freshman_Registration_System_PCClient
+大学新生报到系统局域网内电脑客户端
