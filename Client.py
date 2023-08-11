@@ -1,4 +1,5 @@
 import requests
+import tkinter.messagebox
 import tkinter as tk
 # # 定义请求的 URL
 # url = 'http://127.0.0.1:5000/connection_test'
@@ -29,9 +30,11 @@ DISCONNECTED = 1
 
 class Client():
     def __init__(self):
+        self.version = 'v1.0.0-alpha'
+        
         self.window = tk.Tk()
-        self.window.title("大学新生报到材料辅助收集系统客户端")
-        self.window.geometry("420x300")  # 设置窗口初始大小
+        self.window.title(f"大学新生报到材料辅助收集系统客户端 {self.version}")
+        self.window.geometry("420x600")  # 设置窗口初始大小
         self.window.resizable(False, False)  # 设置窗口不可改变大小
         
         self.connect_state = DISCONNECTED
@@ -39,7 +42,6 @@ class Client():
         self.server_host = '127.0.0.1'
         self.server_host_n1 = tk.IntVar()
         self.server_host_n1.set(127)
-        # self.server_host_n1.trace("w", self.Entry_ServerHost_n1_Change)  # 监视变量值的改变
         self.server_host_n2 = tk.IntVar()
         self.server_host_n2.set(0)
         self.server_host_n3 = tk.IntVar()
@@ -49,6 +51,8 @@ class Client():
         self.server_port = 5000
         self.server_port_n = tk.IntVar()
         self.server_port_n.set(5000)
+        
+        self.choice_list = []
         
         self.CreateWidgets()
     
@@ -91,9 +95,82 @@ class Client():
             bd=2,
             relief="groove",
             )
-        self.Frame_UploadInfomation.place(x=140, y=90, width=270, height=200)
+        self.Frame_UploadInfomation.place(x=140, y=90, width=270, height=500)
+        self.CreateWidgets_Frame_UploadInfomation()
+
+
+    def CreateWidgets_Frame_UploadInfomation(self):
+        widget_width = 0
+        widget_height = 20
+        proportion = 1.1
         
-    
+        
+        
+        self.LabelPrompt_Name = tk.Label(#姓名提示
+            self.Frame_UploadInfomation,
+            text='姓名：',
+            font=('微软雅黑',10),
+            anchor='w',
+            )
+        self.LabelPrompt_Name.place(x=5, y=int(0*widget_height*proportion), width=100, height=widget_height)
+        
+        self.Entry_Name = tk.Entry(#姓名输入框
+            self.Frame_UploadInfomation,
+            font=('微软雅黑',10),
+            )
+        self.Entry_Name.place(x=70, y=int(0*widget_height*proportion), width=190, height=widget_height)
+        
+        self.LabelPrompt_IDNumber = tk.Label(#身份证提示
+            self.Frame_UploadInfomation,
+            text='身份证号：',
+            font=('微软雅黑',10),
+            anchor='w',
+            )
+        self.LabelPrompt_IDNumber.place(x=5, y=int(1*widget_height*proportion), width=100, height=widget_height)
+
+        self.Entry_IDNumber = tk.Entry(#身份证输入框
+            self.Frame_UploadInfomation,
+            font=('微软雅黑',10),
+            )
+        self.Entry_IDNumber.place(x=70, y=int(1*widget_height*proportion), width=190, height=widget_height)
+
+        self.LabelPrompt_StudentNumber = tk.Label(#学号提示
+            self.Frame_UploadInfomation,
+            text='学号：',
+            font=('微软雅黑',10),
+            anchor='w',
+            )
+        self.LabelPrompt_StudentNumber.place(x=5, y=int(2*widget_height*proportion), width=100, height=widget_height)
+
+        self.Entry_StudentNumber = tk.Entry(#学号输入框
+            self.Frame_UploadInfomation,
+            font=('微软雅黑',10),
+            )
+        self.Entry_StudentNumber.place(x=70, y=int(2*widget_height*proportion), width=190, height=widget_height)
+
+        #生成选择框
+        for i in range(15):
+            checkbox_pair = [
+                tk.IntVar(),
+                tk.Checkbutton(
+                    self.Frame_UploadInfomation, 
+                    text="",
+                    font=('微软雅黑',12),
+                    anchor='w',
+                    )
+                ]
+            self.choice_list.append(checkbox_pair)
+            self.choice_list[i][1].configure(variable=self.choice_list[i][0])
+            self.choice_list[i][1].configure(state='disabled')
+            self.choice_list[i][0].set(0)
+            self.choice_list[i][1].place(
+                x=5, 
+                y=int((3+i)*26), 
+                width=100, 
+                height=30
+                )
+
+
     def CreateWidgets_Frame_OperationBar(self):
         button_width = 105
         button_height = 30
@@ -203,22 +280,55 @@ class Client():
     
     def Button_UploadInfomation_Click(self):
         '''TODO : 添加将提交的材料信息打包成json格式的代码'''
-        json_data = {
-            'name':1,
-            'age':0
+        if self.connect_state == CONNECTED:
+            json_data = {
+                '姓名':self.Entry_Name.get(),
+                '身份证号':self.Entry_IDNumber.get(),
+                '学号':self.Entry_StudentNumber.get(),
             }
-        response = requests.post(
-            f'http://{self.server_host}:{self.server_port}/upload_infomation',
-            timeout=MAX_TIMEOUT,
-            json=json_data
-            )
+            for i,pair in enumerate(self.choice_list):
+                checkbox_state = pair[1].cget("state")
+                if checkbox_state == 'normal':
+                    info_name = pair[1].cget("text")
+                    json_data[info_name] = str(pair[0].get())
+                elif checkbox_state == 'disbled':
+                    pass
+            try:
+                response = requests.post(
+                    f'http://{self.server_host}:{self.server_port}/upload_infomation',
+                    timeout=MAX_TIMEOUT,
+                    json=json_data
+                    )
+                if response.status_code==200:
+                    tkinter.messagebox.showinfo('提示','信息上传成功！')
+                else:
+                    tkinter.messagebox.showerror('错误','信息上传失败！')
+            except:
+                self.Button_ConnectToServer_Click()
+                tkinter.messagebox.showerror('错误','信息上传失败！')
+                
+        elif self.connect_state == DISCONNECTED:
+            tkinter.messagebox.showerror('错误','未连接到服务器')
         
         
     def Button_UpdateNeedfulUploadInfomation_Click(self):
-        response = requests.get(
-            f'http://{self.server_host}:{self.server_port}/get_needful_upload_infomation',
-            timeout=MAX_TIMEOUT
-            )
+        '''当更新需要提交的材料类型的按钮点击时执行'''
+        if self.connect_state == CONNECTED:
+            response = requests.get(
+                f'http://{self.server_host}:{self.server_port}/get_needful_upload_infomation',
+                timeout=MAX_TIMEOUT
+                )
+            needful_info = response.json()
+            for i,pair in enumerate(self.choice_list):
+                info_text = needful_info.get(f"info{i}",None)
+                if info_text == None:
+                    pair[1].configure(text='')
+                    pair[1].configure(state='disabled')
+                else:
+                    pair[1].configure(text=info_text)
+                    pair[1].configure(state='normal')
+        elif self.connect_state == DISCONNECTED:
+            tkinter.messagebox.showerror('错误','未连接到服务器')
         
         
     def Entry_ServerPort_MouseWheel(self, event):
@@ -306,16 +416,18 @@ class Client():
         
     
     def Button_ConnectToServer_Click(self):
-        response = requests.get(
-            f'http://{self.server_host}:{self.server_port}/connection_test',
-            timeout=MAX_TIMEOUT
-            )
-        if response.status_code==200:
-            if response.text=='connected':
-                self.connect_state = CONNECTED
-        else:
+        try:
+            response = requests.get(
+                f'http://{self.server_host}:{self.server_port}/connection_test',
+                timeout=MAX_TIMEOUT
+                )
+            if response.status_code==200:
+                if response.text=='connected':
+                    self.connect_state = CONNECTED
+            else:
+                self.connect_state = DISCONNECTED
+        except:
             self.connect_state = DISCONNECTED
-            
         self.SetConnectState()
     
     
