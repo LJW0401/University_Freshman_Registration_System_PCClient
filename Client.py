@@ -1,26 +1,6 @@
 import requests
 import tkinter.messagebox
 import tkinter as tk
-# # 定义请求的 URL
-# url = 'http://127.0.0.1:5000/connection_test'
-
-# # 定义要上传的数据，这里使用一个简单的 JSON 格式数据
-# data = {
-#     'name': 'value',
-#     'a':1,
-#     'b':0,
-#     'c':1,
-#     }
-
-# # 发送请求
-# response = requests.post(
-#     'http://127.0.0.1:5000/upload_infomation', 
-#     json=data
-#     )
-# # response = requests.get(url)
-
-# # 打印响应内容
-# print(response.text)
 
 MAX_TIMEOUT = 1 # 最大超时时间(s)
 
@@ -30,7 +10,7 @@ DISCONNECTED = 1
 
 class Client():
     def __init__(self):
-        self.version = 'v1.0.0-alpha'
+        self.version = 'v1.0.0-beta'
         
         self.window = tk.Tk()
         self.window.title(f"大学新生报到材料辅助收集系统客户端 {self.version}")
